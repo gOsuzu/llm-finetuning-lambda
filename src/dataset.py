@@ -95,7 +95,7 @@ def clean_dialogue(client, text, system_prompt):
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text.split()},
+            {"role": "user", "content": text.strip()},
         ],
     )
     return response.choices[0].message.content
