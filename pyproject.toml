@@ -1,0 +1,11 @@
+[project]
+name = "llm-finetuning-lambda"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "datasets>=4.0.0",
+    "openai>=1.95.1",
+    "python-dotenv>=1.1.1",
+]
