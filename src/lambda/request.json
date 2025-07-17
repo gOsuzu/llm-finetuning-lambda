@@ -3,7 +3,7 @@
     "region_name": "us-east-1",
     "instance_type_name": "gpu_1x_a100_sxm4",
     "ssh_key_names": [
-      "llm-finetune-template-public-key"
+      "llm-finetune-lambda"
     ],
     "file_system_names": [],
     "quantity": 1

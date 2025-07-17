@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# SSH Keys
+*.pem
+src/lambda/ssh-key/
