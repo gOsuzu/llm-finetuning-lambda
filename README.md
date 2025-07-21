@@ -206,6 +206,7 @@ llm-finetuning-lambda/
 ├── src/
 │   ├── dataset.py              # Dataset creation script
 │   ├── download_model.py       # Model download script
+│   ├── notebooks/       # Experiment purpose only
 │   ├── finetune-llm/
 │   │   ├── finetune_lora.py    # Main fine-tuning script with Comet integration
 │   │   ├── constants.py        # Configuration file
