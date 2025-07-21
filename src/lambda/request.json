@@ -1,9 +1,9 @@
 {   
     "name": "llm-finetune-template-instance",
-    "region_name": "us-east-1",
+    "region_name": "us-west-2",
     "instance_type_name": "gpu_1x_a100_sxm4",
     "ssh_key_names": [
-      "llm-finetune-lambda"
+      "llm-finetune-template-lambda"
     ],
     "file_system_names": [],
     "quantity": 1

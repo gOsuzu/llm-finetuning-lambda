@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+# import time
 
 import requests
 from dotenv import load_dotenv
@@ -14,13 +15,13 @@ BASE_URL = "https://cloud.lambda.ai/api/v1"
 def generate_ssh_key():
     """Generate SSH key and save to file."""
     url = f"{BASE_URL}/ssh-keys"
-    open_file = "src/lambda/ssh-key/llm-finetune-lambda.pem"
+    open_file = "src/lambda/ssh-key/llm-finetune-template-lambda.pem"
 
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {API_KEY}"
     }
-    data = {"name": "llm-finetune-lambda"}
+    data = {"name": f"llm-finetune-template-lambda"}
 
     try:
         response = requests.post(url, headers=headers, json=data)
@@ -36,6 +37,39 @@ def generate_ssh_key():
 
     except requests.exceptions.RequestException as e:
         print(f"Error generating SSH key: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response status code: {e.response.status_code}")
+            print(f"Response content: {e.response.text}")
+        return None
+
+
+def get_existing_ssh_key():
+    """Get existing SSH key private key."""
+    url = f"{BASE_URL}/ssh-keys"
+    open_file = "src/lambda/ssh-key/llm-finetune-template-lambda.pem"
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}"
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        ssh_keys = response.json()["data"]
+        for key in ssh_keys:
+            if key["name"] == "llm-finetune-template-lambda":
+                # Note: Lambda Labs API doesn't return private keys for existing keys
+                # We need to generate a new key or use a different approach
+                print("SSH key 'llm-finetune-template-lambda' already exists, but private key is not available.")
+                print("Please generate a new SSH key with a different name.")
+                return None
+        
+        print("SSH key 'llm-finetune-template-lambda' not found")
+        return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching SSH keys: {e}")
         return None
 
 
@@ -60,7 +94,7 @@ def list_intances():
     """List all instances."""
 
     url = f"{BASE_URL}/instances"
-    auth = (API_KEY, "")
+    auth = (API_KEY, "") if API_KEY else None
 
     try:
         response = requests.get(url, auth=auth)
@@ -75,7 +109,7 @@ def list_available_instance_types():
     """List all available instance types from Lambda Labs."""
 
     url = f"{BASE_URL}/instance-types"
-    auth = (API_KEY, "")
+    auth = (API_KEY, "") if API_KEY else None
 
     try:
         response = requests.get(url, auth=auth)
@@ -133,7 +167,7 @@ def launch_instance():
     """Launch a new Lambda Labs instance."""
     url = f"{BASE_URL}/instance-operations/launch"
     headers = {"Content-Type": "application/json"}
-    auth = (API_KEY, "")
+    auth = (API_KEY, "") if API_KEY else None
 
     try:
         with open("src/lambda/request.json", "r") as f:
@@ -149,6 +183,9 @@ def launch_instance():
 
     except requests.exceptions.RequestException as e:
         print(f"Error launching instance: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response status code: {e.response.status_code}")
+            print(f"Response content: {e.response.text}")
         return None
 
 
@@ -191,7 +228,7 @@ def main():
         print("generate-ssh-key - Generate a new SSH key")
         print("list-ssh-keys    - List all SSH keys")
         print("list-instances   - List all instances")
-        print("list-available-instance-types       - List instance types")
+        print("list-types       - List available instance types")
         print("get-ip           - LLM finetune template VM IP")
         print("launch           - Launch instance")
         print("terminate        - Terminate instance")
@@ -203,8 +240,8 @@ def main():
         "generate-ssh-key": generate_ssh_key,
         "list-ssh-keys": list_ssh_keys,
         "list-instances": list_intances,
-        "list-available-instance-types": list_available_instance_types,
-        "get-lambda-ip": get_llm_finetune_template_vm_ip,
+        "list-types": list_available_instance_types,
+        "get-ip": get_llm_finetune_template_vm_ip,
         "launch": launch_instance,
         "terminate": terminate_instances,
     }
