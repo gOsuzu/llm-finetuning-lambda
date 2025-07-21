@@ -1,26 +1,51 @@
 .PHONY: lambda-commands
 
+# Detect Python command
+PYTHON := $(shell command -v python 2> /dev/null || command -v python3 2> /dev/null || echo python3)
+
 create-hf-dataset:
 	echo "Creating HF dataset"
-	python src/dataset.py
+	$(PYTHON) src/dataset.py
+
+create-dataset: create-hf-dataset
 
 generate-ssh-key:
-	python src/lambda/commands.py generate-ssh-key
+	$(PYTHON) src/lambda/commands.py generate-ssh-key
 
 list-ssh-keys:
-	python src/lambda/commands.py list-ssh-keys
+	$(PYTHON) src/lambda/commands.py list-ssh-keys
 
 list-instances:
-	python src/lambda/commands.py list-instances
+	$(PYTHON) src/lambda/commands.py list-instances
 
-list-available-instance-types:
-	python src/lambda/commands.py list-available-instance-types
+list-instance-types:
+	$(PYTHON) src/lambda/commands.py list-types
 
 get-lambda-ip:
-	python src/lambda/commands.py get-lambda-ip
+	$(PYTHON) src/lambda/commands.py get-ip
 
 launch-lambda-instance:
-	python src/lambda/commands.py launch
+	$(PYTHON) src/lambda/commands.py launch
 
-terminate-instances:
+lambda-help:
+	$(PYTHON) src/lambda/commands.py
+
+lambda-setup:
+	echo "Installing dependencies"
+	sudo apt update && sudo apt upgrade -y
+	sudo apt install curl libcurl4-openssl-dev -y 
+	sudo apt remove python3-jax python3-jaxlib -y
+	sudo pip uninstall tensorflow tf-keras jax jaxlib -y
+	pip install -r src/lambda/requirements_common.txt
+	pip install -r src/lambda/requirements_torch.txt --index-url https://download.pytorch.org/whl/cu121
+
+finetune-lora:
+	echo "Finetuning LLM with LoRA approach"
+	$(PYTHON) src/finetune-llm/finetune_lora.py
+
+download-model:
+	echo "Downloading model files"
+	$(PYTHON) src/download_model.py
+
+terminate-instance:
 	python src/lambda/commands.py terminate
