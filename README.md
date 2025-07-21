@@ -8,6 +8,7 @@ This repository provides a project template for fine-tuning Large Language Model
 - **LoRA (Low-Rank Adaptation)** for efficient fine-tuning
 - **Lambda Cloud** GPU instance execution
 - **Hugging Face Hub** automatic model pushing
+- **Comet ML** experiment tracking and visualization
 - **Simple commands** from setup to execution
 
 ### Supported Models
@@ -31,6 +32,7 @@ cp .env.example .env
 HUGGINGFACE_TOKEN=your_huggingface_token # for storing the data and finetuned model
 LAMBDA_API_KEY=your_lambda_api_key # for GPU calculations
 OPENAI_API_KEY=your_openai_api_key # for data preprocessing
+COMET_API_KEY=your_comet_api_key # for experiment tracking and visualization
 ```
 
 ### 3. Launch Lambda Cloud Instance
@@ -46,14 +48,11 @@ make get-lambda-ip
 # Transfer dependency files
 rsync -av --relative -e "ssh -i src/lambda/ssh-key/llm-finetune-template-lambda.pem" Makefile src/lambda/requirements_common.txt src/lambda/requirements_torch.txt ubuntu@<IP_ADDRESS>:/home/ubuntu/
 
-
 # Transfer fine-tuning code
 rsync -av -e "ssh -i src/lambda/ssh-key/llm-finetune-template-lambda.pem" src/finetune-llm ubuntu@<IP_ADDRESS>:/home/ubuntu/src/
 
-
 # Transfer environment variables
 rsync -av -e "ssh -i src/lambda/ssh-key/llm-finetune-template-lambda.pem" .env ubuntu@<IP_ADDRESS>:/home/ubuntu/
-
 ```
 
 ### 5. Install Dependencies
@@ -65,6 +64,35 @@ make lambda-setup
 ### 6. Execute Fine-tuning
 ```bash
 make finetune-lora
+```
+
+## 📊 Comet ML Experiment Tracking
+
+### What is Comet ML?
+Comet ML is a platform for experiment tracking and model management that provides:
+- **Real-time monitoring** of training metrics
+- **Experiment comparison** across different runs
+- **Hyperparameter tracking** and optimization
+- **Model versioning** and deployment tracking
+
+### Setup Comet ML
+1. **Create Account**: Sign up at [comet.com](https://www.comet.com)
+2. **Get API Key**: Copy your API key from the Comet dashboard
+3. **Configure Workspace**: Update `COMET_CONFIG["workspace"]` in `constants.py`
+
+### Viewing Experiments
+During training, you can monitor your experiments in real-time:
+- **Live Dashboard**: View metrics as they update
+- **Training Curves**: Loss, learning rate, and other metrics
+- **System Metrics**: GPU utilization, memory usage
+- **Experiment Comparison**: Compare different runs
+
+### Example Dashboard
+```
+Training Loss: 4.4448 → 0.162
+Learning Rate: 2e-4 → 0.0
+GPU Memory: 24.5 GB
+Training Time: 2h 15m
 ```
 
 ## 📋 Command Reference
@@ -128,20 +156,42 @@ LoRA_CONFIG = {
     ],
 }
 
+# Comet ML configuration
+COMET_CONFIG = {
+    "api_key": None,  # Will be loaded from environment variable
+    "project_name": "llm-finetuning-lambda",
+    "workspace": "your-workspace",  # Change to your Comet workspace
+    "experiment_name": "qwen2.5-7b-lora-finetuning",
+    "log_code": True,
+    "log_parameters": True,
+    "log_metrics": True,
+    "log_histograms": True,
+    "log_gradients": True,
+}
+
 # Training configuration
 TRAINING_ARGS = {
     "learning_rate": 2e-4,
+    "lr_scheduler_type": "linear",
     "per_device_train_batch_size": 4,
     "gradient_accumulation_steps": 4,
     "num_train_epochs": 5,
+    "logging_steps": 1,
+    "optim": "adamw_8bit",
+    "weight_decay": 0.01,
+    "warmup_steps": 5,
     "output_dir": "rick-llm-output",
-    # ... other settings
+    "seed": 42,
+    "report_to": "comet_ml",  # Enable Comet ML tracking
+    "save_steps": 1000,
+    "save_total_limit": 2,
+    "remove_unused_columns": False,
 }
 ```
 
 ### Dataset Configuration
 
-Currently uses the `gOsuzu/rick-and-morty-transcripts-sharegpt` dataset.
+Currently uses the `gOsuzu/rick-and-morty-transcripts-sharegpt` dataset. You can also see how you can make your finetuning dataset at `src/dataset.py`.
 To use your own dataset, modify the following section in `src/finetune-llm/finetune_lora.py`:
 
 ```python
@@ -157,7 +207,7 @@ llm-finetuning-lambda/
 │   ├── dataset.py              # Dataset creation script
 │   ├── download_model.py       # Model download script
 │   ├── finetune-llm/
-│   │   ├── finetune_lora.py    # Main fine-tuning script
+│   │   ├── finetune_lora.py    # Main fine-tuning script with Comet integration
 │   │   ├── constants.py        # Configuration file
 │   │   └── __init__.py
 │   └── lambda/
@@ -166,7 +216,8 @@ llm-finetuning-lambda/
 │       ├── requirements_torch.txt   # PyTorch dependencies
 │       └── ssh-key/            # SSH key storage directory
 ├── Makefile                    # Command definitions
-├── .env                        # Environment variables
+├── env.example                 # Environment variables template
+├── .env                        # Environment variables (create from env.example)
 └── README.md                   # This file
 ```
 
@@ -243,6 +294,15 @@ make lambda-setup
 ssh -i src/lambda/ssh-key/llm-finetune-template-lambda.pem ubuntu@<IP_ADDRESS> "ls -la /home/ubuntu/.env"
 ```
 
+#### 5. Comet ML Connection Error
+```bash
+# Check Comet API key
+ssh -i src/lambda/ssh-key/llm-finetune-template-lambda.pem ubuntu@<IP_ADDRESS> "grep COMET_API_KEY /home/ubuntu/.env"
+
+# Verify Comet configuration
+# Update COMET_CONFIG["workspace"] in constants.py
+```
+
 ## 💰 Cost Optimization
 
 ### Lambda Cloud Pricing
@@ -261,6 +321,12 @@ During training, logs like the following will be displayed:
 ```
 {'loss': 4.4448, 'grad_norm': 6.03125, 'learning_rate': 4e-05, 'epoch': 0.01}
 {'loss': 0.162, 'grad_norm': 0.8984375, 'learning_rate': 0.0, 'epoch': 4.95}
+```
+
+### Comet ML Dashboard
+Access your experiment dashboard at:
+```
+https://www.comet.com/your-workspace/llm-finetuning-lambda
 ```
 
 ### Model Verification

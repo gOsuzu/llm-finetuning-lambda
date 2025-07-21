@@ -40,8 +40,10 @@ lambda-setup:
 	pip install -r src/lambda/requirements_torch.txt --index-url https://download.pytorch.org/whl/cu121
 
 finetune-lora:
-	echo "Finetuning LLM with LoRA approach"
+	echo "Finetuning LLM with LoRA approach and Comet ML tracking"
 	$(PYTHON) src/finetune-llm/finetune_lora.py
+
+
 
 download-model:
 	echo "Downloading model files"
@@ -49,3 +51,16 @@ download-model:
 
 terminate-instance:
 	python src/lambda/commands.py terminate
+
+# Comet ML related commands
+comet-setup:
+	echo "Setting up Comet ML configuration"
+	@echo "Please update the following in src/finetune-llm/constants.py:"
+	@echo "1. COMET_CONFIG['workspace'] - your Comet workspace name"
+	@echo "2. COMET_CONFIG['experiment_name'] - your experiment name"
+	@echo "3. Add COMET_API_KEY to your .env file"
+
+comet-view:
+	echo "Opening Comet ML dashboard"
+	@echo "Visit: https://www.comet.com/your-workspace/llm-finetuning-lambda"
+	@echo "Replace 'your-workspace' with your actual workspace name"

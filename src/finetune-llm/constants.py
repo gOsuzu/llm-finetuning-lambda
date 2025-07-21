@@ -24,6 +24,19 @@ LoRA_CONFIG = {
     "task_type": "CAUSAL_LM",
 }
 
+# Comet ML configuration
+COMET_CONFIG = {
+    "api_key": None,  # Will be loaded from environment variable
+    "project_name": "llm-finetuning-lambda",
+    "workspace": "go-suzui",  # Change to your Comet workspace
+    "experiment_name": "qwen2.5-7b-lora-finetuning",
+    "log_code": True,
+    "log_parameters": True,
+    "log_metrics": True,
+    "log_histograms": True,
+    "log_gradients": True,
+}
+
 # training config
 TRAINING_ARGS = {
     "learning_rate": 2e-4,
@@ -37,7 +50,7 @@ TRAINING_ARGS = {
     "warmup_steps": 5,
     "output_dir": "rick-llm-output",
     "seed": 42,
-    "report_to": "none",
+    "report_to": "comet_ml",  # Changed from "none" to "comet_ml"
     "save_steps": 1000,
     "save_total_limit": 2,
     "remove_unused_columns": False,
